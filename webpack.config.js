@@ -4,7 +4,6 @@ const path = require("path"),
 	MiniCssExtractPlugin = require('mini-css-extract-plugin'),
 	ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin'),
 	CopyPlugin = require('copy-webpack-plugin'),
-	RenameWebpackPlugin = require('rename-webpack-plugin'),
 	ReplaceInFileWebpackPlugin = require('replace-in-file-webpack-plugin'),
 	{ CleanWebpackPlugin } = require('clean-webpack-plugin'),
 	WriteAssetsWebpackPlugin = require('write-assets-webpack-plugin'),
@@ -16,20 +15,7 @@ const packageName = package.name
 
 const isDev = process.env.NODE_ENV === "development"
 
-let devUrl = 'localhost:8084'
-
-if (isDev) {
-	// try to get websitehost name from docker-compose.yml
-	try {
-		const dockerCompose = yaml.safeLoad(fs.readFileSync('./docker-compose.yml', 'utf8'))
-		if (dockerCompose && dockerCompose.services && dockerCompose.services.hasOwnProperty('wordpress-starter-react-plugin')) {
-			let proxyUrl = dockerCompose.services['wordpress-starter-react-plugin'].environment.find(r => r.includes('WEBSITE_HOSTNAME='))
-			if (proxyUrl) devUrl = proxyUrl.slice('WEBSITE_HOSTNAME='.length)
-		}
-	} catch (e) {
-		console.log('Could not load docker-compose.yml')
-	}
-}
+let devUrl = 'localhost:8085'
 
 module.exports = {
 	mode: isDev ? 'development' : 'production',
@@ -44,8 +30,8 @@ module.exports = {
 	output: {
 		path: path.resolve(__dirname, packageName),
 		sourceMapFilename: '[file].map',
-		filename: 'assets/js/plugin-[name].min.js',
-		publicPath: '/wp-content/plugins/wordpress_plugin/',
+		filename: 'assets/js/theme-[name].min.js',
+		publicPath: '/wp-content/themes/wordpress_theme/',
 	},
 
 	resolve: {
@@ -61,32 +47,26 @@ module.exports = {
 
 		// dump css into its own files
 		new MiniCssExtractPlugin({
-			filename: 'assets/css/plugin-[name].min.css',
+			filename: 'assets/css/theme-[name].min.css',
 		}),
 
-		// plugin for React Hot Loader that keeps states for hooks
+		// theme for React Hot Loader that keeps states for hooks
 		isDev && new ReactRefreshWebpackPlugin({
-			disableRefreshCheck: true
+			// disableRefreshCheck: true
 		}),
 
 		// copy all existing code over
-		new CopyPlugin([
-			{ from: 'src', to: './', ignore: ['*/private/**', '*/public/**'] },
-		]),
+		new CopyPlugin({
+			patterns: [{ from: 'src', to: './', globOptions: { ignore: ['**/private/**', '**/public/**', '**/scss/', '**.psd'] } }],
+		}),
 
-		// rename php files to match the plugin name
-		packageName !== 'wordpress_plugin' ? new RenameWebpackPlugin({
-			originNameReg: "wordpress_plugin.php",
-			targetName: `${packageName}.php`
-		}) : false,
-
-		// dynamically change the plugin class name to the package name
-		packageName !== 'wordpress_plugin' ? new ReplaceInFileWebpackPlugin([{
+		// dynamically change the theme class name to the package name
+		packageName !== 'wordpress_theme' ? new ReplaceInFileWebpackPlugin([{
 			dir: packageName,
 			test: /\.php$/,
 			rules: [
 				{
-					search: /wordpress_plugin/g,
+					search: /wordpress_theme/g,
 					replace: packageName
 				}
 			]

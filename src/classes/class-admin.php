@@ -6,7 +6,7 @@
  * README.md file in the root directory of this source tree.
  */
 
-new class('wordpress_plugin_admin', filemtime(__FILE__)) extends wordpress_plugin_base {
+new class('wordpress_theme_admin', filemtime(__FILE__)) extends wordpress_theme_base {
     /**
      * admin_menu.
      *
@@ -19,8 +19,8 @@ new class('wordpress_plugin_admin', filemtime(__FILE__)) extends wordpress_plugi
     public function admin_menu()
     {
         add_menu_page(
-            __('WPS Admin', $this->name),
-            __('WPS Admin', $this->name),
+            __('Theme Admin', $this->name),
+            __('Theme Admin', $this->name),
             'manage_options',
             $this->name,
             [$this, 'menu_page'],
@@ -39,7 +39,7 @@ new class('wordpress_plugin_admin', filemtime(__FILE__)) extends wordpress_plugi
      */
     public function menu_page()
     {
-        echo "<div id=\"wordpress_plugin_react\"></div>";
+        echo "<div id=\"wordpress_theme_react\"></div>";
     }
 
     /**

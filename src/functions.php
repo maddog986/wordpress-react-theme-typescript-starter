@@ -11,20 +11,10 @@
  *
  * @link              https://dpg.host
  * @since             1.0.0
- * @package           wordpress_plugin
+ * @package           wordpress_theme
  * @author            Drew Gauderman <drew@dpg.host>
  * @copyright         2018-2020 Drew Gauderman.
  *
- * @wordpress-plugin
- * Plugin Name:       WPSRT Plugin
- * Plugin URI:        https://dpg.host
- * Description:       A WordPress Starter React Typescript Plugin
- * Version:           1.0.0
- * Author:            Drew Gauderman
- * Author URI:        https://dpg.host
- * Text Domain:       wordpress_plugin
- * License:           MIT
- * License URI:       https://opensource.org/licenses/MIT
  */
 
 // Exit if accessed directly
@@ -41,21 +31,21 @@ if (! defined('ABSPATH')) {
  *
  * @since    1.0.0
  */
-add_action('plugins_loaded', function () {
+(function () {
     // dynamically load classes from the "classes" folder.
     foreach (glob(plugin_dir_path(__FILE__) . "/classes/*.php") as $filename) {
         include($filename);
     }
-});
+})();
 
 /**
- * wordpress_plugin_base. other classes extend this one.
+ * wordpress_theme_base. other classes extend this one.
  *
  * @author	Drew Gauderman <drew@dpg.host>
  * @since	v1.0.0
  * @global
  */
-class wordpress_plugin_base
+class wordpress_theme_base
 {
     /**
      * @since	v1.0.0
@@ -76,14 +66,14 @@ class wordpress_plugin_base
      * @var		string	$version
      * @access	protected
      */
-    protected $plugin_url;
+    protected $url;
 
     /**
      * @since	v1.0.0
      * @var		string	$version
      * @access	protected
      */
-    protected $plugin_path;
+    protected $path;
 
     /**
      * __construct
@@ -102,8 +92,8 @@ class wordpress_plugin_base
 
         $this->name = $name;
         $this->version = $version;
-        $this->plugin_url = plugin_dir_url(__FILE__);
-        $this->plugin_path = plugin_dir_path(__FILE__);
+        $this->url = get_template_directory_uri(__FILE__);
+        $this->path = plugin_dir_path(__FILE__);
 
         //debug mode enabled
         if ($this->is_debug()) {
@@ -131,7 +121,7 @@ class wordpress_plugin_base
             $reflection = new ReflectionMethod(get_class($this), $method_name);
             $args = $reflection->getNumberOfParameters();
 
-            foreach ($wp_filter as $name => $value) {
+            foreach (array_keys($wp_filter) as $name) {
                 if (strpos($method_name, $name) !== false) {
                     $this->action($name, $method_name, 10, $args);
 
@@ -158,12 +148,16 @@ class wordpress_plugin_base
      */
     public function action($hook = '', $callback, $priority = 10, $accepted_args = false)
     {
+        if (is_string($callback) && method_exists($this, $callback)) {
+            $callback = [$this, $callback];
+        }
+
         if ($accepted_args === false) {
             if (is_array($callback)) {
                 $fct = new ReflectionMethod($callback[0], $callback[1]);
                 $accepted_args = $fct->getNumberOfRequiredParameters();
             } else {
-                $fct = new ReflectionFunction('client_func');
+                $fct = new ReflectionFunction($callback);
                 $accepted_args = $fct->getNumberOfRequiredParameters();
             }
         }
@@ -186,12 +180,16 @@ class wordpress_plugin_base
      */
     public function filter($hook = '', $callback, $priority = 10, $accepted_args = false)
     {
+        if (is_string($callback) && method_exists($this, $callback)) {
+            $callback = [$this, $callback];
+        }
+
         if ($accepted_args === false) {
             if (is_array($callback)) {
                 $fct = new ReflectionMethod($callback[0], $callback[1]);
                 $accepted_args = $fct->getNumberOfRequiredParameters();
             } else {
-                $fct = new ReflectionFunction('client_func');
+                $fct = new ReflectionFunction($callback);
                 $accepted_args = $fct->getNumberOfRequiredParameters();
             }
         }
@@ -212,6 +210,10 @@ class wordpress_plugin_base
      */
     public function add_shortcode($tag = '', $callback)
     {
+        if (is_string($callback) && method_exists($this, $callback)) {
+            $callback = [$this, $callback];
+        }
+
         $this->add('shortcode', $tag, $callback);
     }
 
@@ -228,6 +230,10 @@ class wordpress_plugin_base
      */
     public function remove_action($tag = '', $callback, $priority = 10)
     {
+        if (is_string($callback) && method_exists($this, $callback)) {
+            $callback = [$this, $callback];
+        }
+
         $this->add('remove_action', $tag, $callback, $priority);
     }
 
@@ -244,6 +250,10 @@ class wordpress_plugin_base
      */
     public function remove_filter($tag = '', $callback, $priority = 10)
     {
+        if (is_string($callback) && method_exists($this, $callback)) {
+            $callback = [$this, $callback];
+        }
+
         $this->add('remove_filter', $tag, $callback, $priority);
     }
 
@@ -321,7 +331,7 @@ class wordpress_plugin_base
      */
     protected function get_template($fileName = '', $arg = null)
     {
-        include($this->plugin_path . "template-parts/$fileName.php");
+        include($this->path . "/template-parts/$fileName.php");
     }
 
     /**
@@ -336,7 +346,7 @@ class wordpress_plugin_base
      */
     protected function get_asset_img_path($fileName = '')
     {
-        return $this->plugin_path . "assets/img/$fileName";
+        return $this->path . "/assets/img/$fileName";
     }
 
     /**
@@ -351,7 +361,7 @@ class wordpress_plugin_base
      */
     protected function get_asset_css_url($fileName = '')
     {
-        return $this->plugin_url . "assets/css/$fileName";
+        return $this->url . "/assets/css/$fileName";
     }
 
     /**
@@ -366,7 +376,7 @@ class wordpress_plugin_base
      */
     protected function get_asset_css_version($fileName = '')
     {
-        return @filemtime($this->plugin_path . "assets/css/$fileName");
+        return @filemtime($this->path . "/assets/css/$fileName");
     }
 
     /**
@@ -381,7 +391,7 @@ class wordpress_plugin_base
      */
     protected function get_asset_js_version($fileName = '')
     {
-        return @filemtime($this->plugin_path . "assets/js/$fileName");
+        return @filemtime($this->path . "/assets/js/$fileName");
     }
 
     /**
@@ -396,7 +406,7 @@ class wordpress_plugin_base
      */
     protected function get_asset_js_url($fileName = '')
     {
-        return $this->plugin_url . "assets/js/$fileName";
+        return $this->url . "/assets/js/$fileName";
     }
 
     /**
@@ -513,7 +523,11 @@ class wordpress_plugin_base
      */
     public function wp_enqueue_style($name, $file)
     {
-        wp_enqueue_style($name, $this->get_asset_css_url($file), [], $this->get_asset_css_version($file));
+       if (strpos($file, '//')) {
+            wp_enqueue_style($name, $file, []);
+        } else {
+            wp_enqueue_style($name, $this->get_asset_css_url($file), [], $this->get_asset_css_version($file));
+        }
     }
 
     /**
@@ -530,8 +544,12 @@ class wordpress_plugin_base
      */
     public function wp_enqueue_script($name, $file, $depends = [])
     {
-        wp_deregister_script($name);
-        wp_enqueue_script($name, $this->get_asset_js_url($file), $depends, $this->get_asset_js_version($file), true);
+       wp_deregister_script($name);
+        if (strpos($file, '//')) {
+            wp_enqueue_script($name, $file, $depends);
+        } else {
+            wp_enqueue_script($name, $this->get_asset_js_url($file), $depends, $this->get_asset_js_version($file), true);
+        }
         wp_enqueue_script($name);
     }
 
@@ -553,14 +571,18 @@ class wordpress_plugin_base
         wp_deregister_script($name);
 
         // load javascript
-        wp_register_script($name, $this->get_asset_js_url($file), $depends, $this->get_asset_js_version($file), true);
+        if (strpos($file, '//')) {
+            wp_register_script($name, $file, $depends);
+        } else {
+            wp_register_script($name, $this->get_asset_js_url($file), $depends, $this->get_asset_js_version($file), true);
+        }
 
         if ($localize) {
-            wp_localize_script($this->name, $localize, $localizeArray);
+            wp_localize_script($name, $localize, $localizeArray);
         }
 
         // Enqueue our script
-        wp_enqueue_script($this->name);
+        wp_enqueue_script($name);
     }
 
     /**

@@ -7,15 +7,15 @@
  */
 
 /**
- * wordpress_plugin.
+ * wordpress_theme.
  *
  * @author	Drew Gauderman <drew@dpg.host>
  * @since	v1.0.0
  * @version	v1.0.0	Friday, May 1st, 2020.
- * @see		wordpress_plugin_base
+ * @see		wordpress_theme_base
  * @global
  */
-new class('wordpress_plugin', filemtime(__FILE__)) extends wordpress_plugin_base {
+new class('wordpress_theme', filemtime(__FILE__)) extends wordpress_theme_base {
     /**
      * Loads all the frontend css styles & javascripts
      *
@@ -28,9 +28,9 @@ new class('wordpress_plugin', filemtime(__FILE__)) extends wordpress_plugin_base
     public function wp_enqueue_scripts_styles()
     {
         // our CSS file
-        $this->wp_enqueue_style($this->name, 'plugin-public.min.css');
+        $this->wp_enqueue_style($this->name, 'theme-public.min.css');
 
         // our JavaScript file
-        $this->wp_enqueue_script($this->name, 'plugin-public.min.js', ['jquery']);
+        $this->wp_enqueue_script($this->name, 'theme-public.min.js', ['jquery']);
     }
 };
